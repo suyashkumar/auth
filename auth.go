@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"errors"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
 	"github.com/suyashkumar/auth/db"
@@ -10,7 +12,7 @@ import (
 type Auth interface {
 	Register(user User, password string) error
 	Login(email string, password string) (token string, err error)
-	Verify(token string) (bool, error)
+	Validate(token string) (*Claims, error)
 }
 
 type auth struct {
@@ -25,7 +27,9 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func NewAuthenticator(dbConnection string, signingKey []byte) (*auth, error) {
+var ErrorValidatingToken = errors.New("Problem validating token")
+
+func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	d, err := db.Get(dbConnection)
 	if err != nil {
 		return nil, err
@@ -60,7 +64,7 @@ func (a *auth) Register(newUser User, password string) error {
 	return nil
 }
 
-func (a *auth) Login(email string, password string) (token string, err error) {
+func (a *auth) Login(email string, password string) (string, error) {
 	// Check database for User and verify credentials
 	var user User
 	d, err := db.Get("")
@@ -87,13 +91,24 @@ func (a *auth) Login(email string, password string) (token string, err error) {
 		Email:       user.Email,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
-	token, err = t.SignedString(a.signingKey)
+	token, err := t.SignedString(a.signingKey)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
 }
 
-func (a *auth) Verify(token string) (bool, error) {
-	return false, nil
+func (a *auth) Validate(token string) (*Claims, error) {
+	t, err := jwt.ParseWithClaims(token, Claims{}, func(jt *jwt.Token) (interface{}, error) {
+		return []byte(a.signingKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := t.Claims.(*Claims); ok && t.Valid {
+		return claims, nil
+	}
+
+	return &Claims{}, ErrorValidatingToken
 }
