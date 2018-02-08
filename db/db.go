@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,6 +26,7 @@ func Get(dbConnection string) (*gorm.DB, error) {
 	d, err := gorm.Open("postgres", dbConnection)
 	if err != nil {
 		logrus.WithField("DBConnString", dbConnection).Error("Unable to connect to database")
+		logrus.Error(err)
 	}
 
 	d.DB().SetMaxIdleConns(DefaultMaxIdleConns)

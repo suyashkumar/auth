@@ -27,7 +27,7 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-var ErrorValidatingToken = errors.New("Problem validating token")
+var ErrorValidatingToken = errors.New("problem validating token")
 
 func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	d, err := db.Get(dbConnection)
@@ -99,7 +99,7 @@ func (a *auth) Login(email string, password string) (string, error) {
 }
 
 func (a *auth) Validate(token string) (*Claims, error) {
-	t, err := jwt.ParseWithClaims(token, Claims{}, func(jt *jwt.Token) (interface{}, error) {
+	t, err := jwt.ParseWithClaims(token, &Claims{}, func(jt *jwt.Token) (interface{}, error) {
 		return []byte(a.signingKey), nil
 	})
 	if err != nil {
