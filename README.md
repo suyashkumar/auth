@@ -1,4 +1,4 @@
-# auth
+# auth [WIP]
 A simple (but opinionated) Golang authentication library with a very simple interface:
 
 ```go
