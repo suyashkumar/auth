@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/suyashkumar/auth/db"
 	"golang.org/x/crypto/bcrypt"
@@ -50,6 +51,9 @@ func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 
 // Register adds a new user.
 func (a *auth) Register(newUser User, password string) error {
+	// Always generate a new UUID for newUser
+	newUser.UUID = uuid.NewV4()
+
 	// Hash password, add to the newUser struct
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
