@@ -103,7 +103,7 @@ func (a *auth) GetToken(email string, password string, requestedPermissions Perm
 	// Generate a login token for this user
 	c := Claims{
 		UserUUID:    user.UUID.String(),
-		Permissions: int64(user.MaxPermissionLevel),
+		Permissions: int64(requestedPermissions),
 		Email:       user.Email,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
