@@ -1,5 +1,5 @@
 # auth [WIP]
-A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at suyashkumar/auth-grpc.
+A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at suyashkumar/auth-grpc soon.
 
 ```go
 type Auth interface {
@@ -13,8 +13,8 @@ You only need to provide a database `connectionString` and `signingKey`, and eve
 * table and database setup (including uniqueness constraints and useful indicies)
 * hashing passwords using `bcrypt` on register
 * comparing hashed passwords on login
-* validation of new user fields like "Email"
-* extraction of embedded fields that might be stored in the JWT
+* validation of new user fields like "Email" (TBD)
+* encoding and extraction of key fields stored in the JSON Web Token (JWT)
 * ensuring that a token's requested permissions does not exceed the user's maximum permission level
 
 A minimal example is below:
