@@ -26,7 +26,7 @@ func main() {
 	a.Register(u, "password")
 
 	// Login as user
-	token, err := a.Login(u.Email, "password", auth.PERMISSIONS_USER)
+	token, err := a.GetToken(u.Email, "password", auth.PERMISSIONS_USER)
 	if err != nil {
 		log.Fatal(err)
 	}

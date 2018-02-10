@@ -11,7 +11,7 @@ import (
 
 type Auth interface {
 	Register(user User, password string) error
-	Login(email string, password string, requestedPermissions Permissions) (token string, err error)
+	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 
@@ -67,7 +67,7 @@ func (a *auth) Register(newUser User, password string) error {
 	return nil
 }
 
-func (a *auth) Login(email string, password string, requestedPermissions Permissions) (string, error) {
+func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
 	var user User
 	d, err := db.Get("")
