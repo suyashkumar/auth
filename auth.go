@@ -11,7 +11,7 @@ import (
 
 type Auth interface {
 	Register(user User, password string) error
-	Login(email string, password string) (token string, err error)
+	Login(email string, password string, requestedPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 
@@ -28,6 +28,9 @@ type Claims struct {
 }
 
 var ErrorValidatingToken = errors.New("problem validating token")
+var ErrorExceededMaxPermissionLevel = errors.New(
+	"you're requesting a token permission level that exceeds this user's maximum permission level",
+)
 
 func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	d, err := db.Get(dbConnection)
@@ -64,7 +67,7 @@ func (a *auth) Register(newUser User, password string) error {
 	return nil
 }
 
-func (a *auth) Login(email string, password string) (string, error) {
+func (a *auth) Login(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
 	var user User
 	d, err := db.Get("")
@@ -84,10 +87,15 @@ func (a *auth) Login(email string, password string) (string, error) {
 		return "", err
 	}
 
+	// Verify requestedPermissions
+	if requestedPermissions > user.MaxPermissionLevel {
+		return "", ErrorExceededMaxPermissionLevel
+	}
+
 	// Generate a login token for this user
 	c := Claims{
 		UserUUID:    user.UUID.String(),
-		Permissions: int64(user.Permissions),
+		Permissions: int64(user.MaxPermissionLevel),
 		Email:       user.Email,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
