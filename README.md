@@ -4,7 +4,7 @@ A simple (but opinionated) Golang authentication library with a very simple inte
 ```go
 type Auth interface {
 	Register(user User, password string) error
-	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
+	GetToken(email string, password string, reqPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 ```
