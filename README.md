@@ -15,6 +15,7 @@ You only need to provide a database `connectionString` and `signingKey`, and eve
 * comparing hashed passwords on login
 * validation of new user fields like "Email"
 * extraction of embedded fields that might be stored in the JWT
+* ensuring that a token's requested permissions does not exceed the user's maximum permission level
 
 A minimal example is below:
 ```go
