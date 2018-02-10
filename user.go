@@ -7,6 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// Permissions represents different permission levels that can be encoded in a token or attached to a user
 type Permissions int64
 
 // These permission levels are ORDERED lowest to highest
