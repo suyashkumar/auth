@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Auth exposes the minimal set of operations needed for authentication
 type Auth interface {
 	Register(user User, password string) error
 	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
@@ -20,6 +21,7 @@ type auth struct {
 	signingKey   []byte
 }
 
+// Claims represents data that are encoded into an authentication token
 type Claims struct {
 	UserUUID    string `json:"user_uuid"`
 	Permissions int64  `json:"permissions"`
@@ -32,6 +34,7 @@ var ErrorExceededMaxPermissionLevel = errors.New(
 	"you're requesting a token permission level that exceeds this user's maximum permission level",
 )
 
+// NewAuthenticator returns a newly initialized Auth
 func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	d, err := db.Get(dbConnection)
 	if err != nil {
@@ -45,7 +48,7 @@ func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	}, nil
 }
 
-// Register adds a new user
+// Register adds a new user.
 func (a *auth) Register(newUser User, password string) error {
 	// Hash password, add to the newUser struct
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -67,6 +70,7 @@ func (a *auth) Register(newUser User, password string) error {
 	return nil
 }
 
+// GetToken mints a new authentication token at the given requestedPermissions level, if possible.
 func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
 	var user User
@@ -106,6 +110,7 @@ func (a *auth) GetToken(email string, password string, requestedPermissions Perm
 	return token, nil
 }
 
+// Validate decrypts and validates a token. Returns any claims embedded in the token.
 func (a *auth) Validate(token string) (*Claims, error) {
 	t, err := jwt.ParseWithClaims(token, &Claims{}, func(jt *jwt.Token) (interface{}, error) {
 		return []byte(a.signingKey), nil
