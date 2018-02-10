@@ -1,5 +1,5 @@
 # auth [WIP]
-A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at suyashkumar/auth-grpc soon.
+A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at [suyashkumar/auth-grpc](https://github.com/suyashkumar/auth-grpc) soon.
 
 ```go
 type Auth interface {
