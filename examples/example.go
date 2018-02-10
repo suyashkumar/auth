@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// Register a new user
-	a.Register(u, "password")
+	a.Register(&u, "password")
 
 	// Login as user
 	token, err := a.GetToken(u.Email, "password", auth.PERMISSIONS_USER)

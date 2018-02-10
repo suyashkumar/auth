@@ -12,7 +12,7 @@ import (
 
 // Auth exposes the minimal set of operations needed for authentication
 type Auth interface {
-	Register(user User, password string) error
+	Register(user *User, password string) error
 	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
@@ -50,7 +50,7 @@ func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 }
 
 // Register adds a new user.
-func (a *auth) Register(newUser User, password string) error {
+func (a *auth) Register(newUser *User, password string) error {
 	// Always generate a new UUID for newUser
 	newUser.UUID = uuid.NewV4()
 
