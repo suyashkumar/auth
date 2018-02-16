@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/suyashkumar/auth/db"
@@ -18,8 +19,8 @@ type Auth interface {
 }
 
 type auth struct {
-	dbConnection string
-	signingKey   []byte
+	db         *gorm.DB
+	signingKey []byte
 }
 
 // Claims represents data that are encoded into an authentication token
@@ -41,11 +42,13 @@ func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// AutoMigrate any auth specific schemas:
 	d.AutoMigrate(&User{})
 
 	return &auth{
-		dbConnection: dbConnection,
-		signingKey:   signingKey,
+		db:         d,
+		signingKey: signingKey,
 	}, nil
 }
 
@@ -62,11 +65,10 @@ func (a *auth) Register(newUser *User, password string) error {
 	newUser.HashedPassword = string(hash)
 
 	// Upsert user
-	d, err := db.Get("")
 	if err != nil {
 		return err
 	}
-	err = d.Create(&newUser).Error
+	err = a.db.Create(&newUser).Error
 	if err != nil {
 		return err
 	}
@@ -78,11 +80,7 @@ func (a *auth) Register(newUser *User, password string) error {
 func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
 	var user User
-	d, err := db.Get("")
-	if err != nil {
-		return "", err
-	}
-	err = d.Where(&User{Email: email}).First(&user).Error
+	err := a.db.Where(&User{Email: email}).First(&user).Error
 	if err != nil {
 		logrus.Error(err)
 		return "", err

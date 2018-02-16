@@ -27,6 +27,7 @@ func Get(dbConnection string) (*gorm.DB, error) {
 	if err != nil {
 		logrus.WithField("DBConnString", dbConnection).Error("Unable to connect to database")
 		logrus.Error(err)
+		return nil, err
 	}
 
 	d.DB().SetMaxIdleConns(DefaultMaxIdleConns)
