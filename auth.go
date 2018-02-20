@@ -5,21 +5,19 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
-	"github.com/suyashkumar/auth/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Auth exposes the minimal set of operations needed for authentication
-type Auth interface {
+// Authenticator exposes the minimal set of operations needed for authentication
+type Authenticator interface {
 	Register(user *User, password string) error
 	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 
 type auth struct {
-	dbConnection string
-	signingKey   []byte
+	databaseHandler DatabaseHandler
+	signingKey      []byte
 }
 
 // Claims represents data that are encoded into an authentication token
@@ -35,17 +33,16 @@ var ErrorExceededMaxPermissionLevel = errors.New(
 	"you're requesting a token permission level that exceeds this user's maximum permission level",
 )
 
-// NewAuthenticator returns a newly initialized Auth
-func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
-	d, err := db.Get(dbConnection)
+// NewAuthenticator returns a newly initialized Authenticator
+func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, error) {
+	d, err := NewDatabaseHandler(dbConnection)
 	if err != nil {
 		return nil, err
 	}
-	d.AutoMigrate(&User{})
 
 	return &auth{
-		dbConnection: dbConnection,
-		signingKey:   signingKey,
+		databaseHandler: d,
+		signingKey:      signingKey,
 	}, nil
 }
 
@@ -62,11 +59,7 @@ func (a *auth) Register(newUser *User, password string) error {
 	newUser.HashedPassword = string(hash)
 
 	// Upsert user
-	d, err := db.Get("")
-	if err != nil {
-		return err
-	}
-	err = d.Create(&newUser).Error
+	err = a.databaseHandler.UpsertUser(*newUser)
 	if err != nil {
 		return err
 	}
@@ -77,14 +70,9 @@ func (a *auth) Register(newUser *User, password string) error {
 // GetToken mints a new authentication token at the given requestedPermissions level, if possible.
 func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
-	var user User
-	d, err := db.Get("")
+	user, err := a.databaseHandler.GetUser(User{Email: email})
+
 	if err != nil {
-		return "", err
-	}
-	err = d.Where(&User{Email: email}).First(&user).Error
-	if err != nil {
-		logrus.Error(err)
 		return "", err
 	}
 
