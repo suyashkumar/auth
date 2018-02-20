@@ -15,7 +15,7 @@ var ErrorNoConnectionString = errors.New("A connection string must be specified 
 type DatabaseHandler interface {
 	// GetUser gets a user from the database that matches constraints on the input user
 	GetUser(u User) (User, error)
-	// UpsertUser updates or inserts a user provided
+	// UpsertUser updates a user (if input user UUID matches one in the db) or inserts a user
 	UpsertUser(u User) error
 }
 
@@ -48,7 +48,7 @@ func (a *databaseHandler) GetUser(u User) (User, error) {
 }
 
 func (a *databaseHandler) UpsertUser(u User) error {
-	err := a.db.Where(u).Assign(u).FirstOrCreate(&User{}).Error
+	err := a.db.Where(User{UUID: u.UUID}).Assign(u).FirstOrCreate(&User{}).Error
 	if err != nil {
 		return err
 	}
