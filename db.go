@@ -11,8 +11,11 @@ const DefaultMaxIdleConns = 5
 
 var ErrorNoConnectionString = errors.New("A connection string must be specified on the first call to Get")
 
+// DatabaseHandler abstracts away common persistence operations needed for this package
 type DatabaseHandler interface {
+	// GetUser gets a user from the database that matches constraints on the input user
 	GetUser(u User) (User, error)
+	// UpsertUser updates or inserts a user provided
 	UpsertUser(u User) error
 }
 
@@ -20,12 +23,13 @@ type databaseHandler struct {
 	db *gorm.DB
 }
 
+// NewDatabaseHandler initializes and returns a new DatabaseHandler
 func NewDatabaseHandler(dbConnection string) (DatabaseHandler, error) {
 	db, err := getDB(dbConnection)
 	if err != nil {
 		return nil, err
 	}
-
+	// AutoMigrate relevant schemas
 	db.AutoMigrate(&User{})
 
 	return &databaseHandler{
@@ -53,7 +57,6 @@ func (a *databaseHandler) UpsertUser(u User) error {
 }
 
 func getDB(dbConnection string) (*gorm.DB, error) {
-
 	if dbConnection == "" {
 		return nil, ErrorNoConnectionString
 	}
