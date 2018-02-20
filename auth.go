@@ -5,19 +5,18 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Auth exposes the minimal set of operations needed for authentication
-type Auth interface {
+// Authenticator exposes the minimal set of operations needed for authentication
+type Authenticator interface {
 	Register(user *User, password string) error
 	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 
 type auth struct {
-	storer     Storer
+	storer     DatabaseHandler
 	signingKey []byte
 }
 
@@ -34,9 +33,9 @@ var ErrorExceededMaxPermissionLevel = errors.New(
 	"you're requesting a token permission level that exceeds this user's maximum permission level",
 )
 
-// NewAuthenticator returns a newly initialized Auth
-func NewAuthenticator(dbConnection string, signingKey []byte) (Auth, error) {
-	s, err := NewStorer(dbConnection)
+// NewAuthenticator returns a newly initialized Authenticator
+func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, error) {
+	s, err := NewDatabaseHandler(dbConnection)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +73,6 @@ func (a *auth) GetToken(email string, password string, requestedPermissions Perm
 	user, err := a.storer.GetUser(User{Email: email})
 
 	if err != nil {
-		logrus.Error(err)
 		return "", err
 	}
 
