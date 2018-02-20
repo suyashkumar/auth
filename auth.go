@@ -35,13 +35,13 @@ var ErrorExceededMaxPermissionLevel = errors.New(
 
 // NewAuthenticator returns a newly initialized Authenticator
 func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, error) {
-	s, err := NewDatabaseHandler(dbConnection)
+	d, err := NewDatabaseHandler(dbConnection)
 	if err != nil {
 		return nil, err
 	}
 
 	return &auth{
-		databaseHandler: s,
+		databaseHandler: d,
 		signingKey:      signingKey,
 	}, nil
 }
