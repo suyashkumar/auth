@@ -16,8 +16,8 @@ type Authenticator interface {
 }
 
 type auth struct {
-	storer     DatabaseHandler
-	signingKey []byte
+	databaseHandler DatabaseHandler
+	signingKey      []byte
 }
 
 // Claims represents data that are encoded into an authentication token
@@ -41,8 +41,8 @@ func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, er
 	}
 
 	return &auth{
-		storer:     s,
-		signingKey: signingKey,
+		databaseHandler: s,
+		signingKey:      signingKey,
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (a *auth) Register(newUser *User, password string) error {
 	newUser.HashedPassword = string(hash)
 
 	// Upsert user
-	err = a.storer.UpsertUser(*newUser)
+	err = a.databaseHandler.UpsertUser(*newUser)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (a *auth) Register(newUser *User, password string) error {
 // GetToken mints a new authentication token at the given requestedPermissions level, if possible.
 func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
 	// Check database for User and verify credentials
-	user, err := a.storer.GetUser(User{Email: email})
+	user, err := a.databaseHandler.GetUser(User{Email: email})
 
 	if err != nil {
 		return "", err
