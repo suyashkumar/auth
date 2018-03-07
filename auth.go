@@ -11,7 +11,7 @@ import (
 // Authenticator exposes the minimal set of operations needed for authentication
 type Authenticator interface {
 	Register(user *User, password string) error
-	GetToken(email string, password string, requestedPermissions Permissions) (token string, err error)
+	GetToken(email string, password string, opts *GetTokenOpts) (token string, err error)
 	Validate(token string) (*Claims, error)
 }
 
@@ -20,12 +20,20 @@ type auth struct {
 	signingKey      []byte
 }
 
+type TokenData map[string]string
+
 // Claims represents data that are encoded into an authentication token
 type Claims struct {
-	UserUUID    string `json:"user_uuid"`
-	Permissions int64  `json:"permissions"`
-	Email       string `json:"email"`
+	UserUUID    string    `json:"user_uuid"`
+	Permissions int64     `json:"permissions"`
+	Email       string    `json:"email"`
+	Data        TokenData `json:"data"`
 	jwt.StandardClaims
+}
+
+type GetTokenOpts struct {
+	RequestedPermissions Permissions
+	Data                 TokenData
 }
 
 var ErrorValidatingToken = errors.New("problem validating token")
@@ -68,7 +76,7 @@ func (a *auth) Register(newUser *User, password string) error {
 }
 
 // GetToken mints a new authentication token at the given requestedPermissions level, if possible.
-func (a *auth) GetToken(email string, password string, requestedPermissions Permissions) (string, error) {
+func (a *auth) GetToken(email string, password string, opts *GetTokenOpts) (string, error) {
 	// Check database for User and verify credentials
 	user, err := a.databaseHandler.GetUser(User{Email: email})
 
@@ -84,15 +92,16 @@ func (a *auth) GetToken(email string, password string, requestedPermissions Perm
 	}
 
 	// Verify requestedPermissions
-	if requestedPermissions > user.MaxPermissionLevel {
+	if opts.RequestedPermissions > user.MaxPermissionLevel {
 		return "", ErrorExceededMaxPermissionLevel
 	}
 
 	// Generate a login token for this user
 	c := Claims{
 		UserUUID:    user.UUID.String(),
-		Permissions: int64(requestedPermissions),
+		Permissions: int64(opts.RequestedPermissions),
 		Email:       user.Email,
+		Data:        opts.Data,
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	token, err := t.SignedString(a.signingKey)
