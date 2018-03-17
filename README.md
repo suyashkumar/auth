@@ -1,4 +1,7 @@
 # auth [WIP]
+[![Godoc Reference](https://godoc.org/github.com/suyashkumar/auth?status.svg)](https://godoc.org/github.com/suyashkumar/auth)
+[![Go Report Card](https://goreportcard.com/badge/github.com/suyashkumar/auth)](https://goreportcard.com/report/github.com/suyashkumar/auth)
+
 A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at [suyashkumar/auth-grpc](https://github.com/suyashkumar/auth-grpc) soon.
 
 ```go
