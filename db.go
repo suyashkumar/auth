@@ -17,6 +17,8 @@ type DatabaseHandler interface {
 	GetUser(u User) (User, error)
 	// UpsertUser updates a user (if input user UUID matches one in the db) or inserts a user
 	UpsertUser(u User) error
+	// GetDB returns the *gorm.DB instance used by this handler
+	GetDB() *gorm.DB
 }
 
 type databaseHandler struct {
@@ -30,8 +32,16 @@ func NewDatabaseHandler(dbConnection string) (DatabaseHandler, error) {
 		return nil, err
 	}
 	// AutoMigrate relevant schemas
-	db.AutoMigrate(&User{})
+	migrateSchemas(db)
 
+	return &databaseHandler{
+		db: db,
+	}, nil
+}
+
+// NewDatabaseHandlerFromGORM initializes and returns a DatabaseHandler from a supplied *gorm.DB connection
+func NewDatabaseHandlerFromGORM(db *gorm.DB) (DatabaseHandler, error) {
+	migrateSchemas(db)
 	return &databaseHandler{
 		db: db,
 	}, nil
@@ -56,6 +66,10 @@ func (a *databaseHandler) UpsertUser(u User) error {
 	return nil
 }
 
+func (d *databaseHandler) GetDB() *gorm.DB {
+	return d.db
+}
+
 func getDB(dbConnection string) (*gorm.DB, error) {
 	if dbConnection == "" {
 		return nil, ErrorNoConnectionString
@@ -70,4 +84,8 @@ func getDB(dbConnection string) (*gorm.DB, error) {
 
 	return d, nil
 
+}
+
+func migrateSchemas(db *gorm.DB) {
+	db.AutoMigrate(&User{})
 }
