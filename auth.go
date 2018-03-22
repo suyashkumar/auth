@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -44,6 +45,19 @@ var ErrorExceededMaxPermissionLevel = errors.New(
 // NewAuthenticator returns a newly initialized Authenticator
 func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, error) {
 	d, err := NewDatabaseHandler(dbConnection)
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth{
+		databaseHandler: d,
+		signingKey:      signingKey,
+	}, nil
+}
+
+// NewAuthenticatorFromGORM returns a newly init'd Authenticator from a *gorm.DB
+func NewAuthenticatorFromGORM(db *gorm.DB, signingKey []byte) (Authenticator, error) {
+	d, err := NewDatabaseHandlerFromGORM(db)
 	if err != nil {
 		return nil, err
 	}
