@@ -7,8 +7,10 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+// DefaultMaxIdleConns represents the default maximum idle connections to the db
 const DefaultMaxIdleConns = 5
 
+// ErrorNoConnectionString indicates no connection string was provided
 var ErrorNoConnectionString = errors.New("A connection string must be specified on the first call to Get")
 
 // DatabaseHandler abstracts away common persistence operations needed for this package
