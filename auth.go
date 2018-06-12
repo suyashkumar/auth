@@ -3,6 +3,8 @@ package auth
 import (
 	"errors"
 
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
@@ -34,13 +36,20 @@ type Claims struct {
 
 type GetTokenOpts struct {
 	RequestedPermissions Permissions
+	TimeToLive           time.Duration
 	Data                 TokenData
 }
 
+// ErrorValidatingToken indicates issues validating the provided token
 var ErrorValidatingToken = errors.New("problem validating token")
+
+// ErrorExceededMaxPermissionLevel indicates that a requested op exceeded the maximum permission level
 var ErrorExceededMaxPermissionLevel = errors.New(
 	"you're requesting a token permission level that exceeds this user's maximum permission level",
 )
+
+// DefaultTTL represents the default time to live for a newly issued token in nanoseconds, in this case 8 hours
+const DefaultTTL = time.Duration(2.88e13)
 
 // NewAuthenticator returns a newly initialized Authenticator
 func NewAuthenticator(dbConnection string, signingKey []byte) (Authenticator, error) {
@@ -111,11 +120,19 @@ func (a *auth) GetToken(email string, password string, opts *GetTokenOpts) (stri
 	}
 
 	// Generate a login token for this user
+	var ttl = opts.TimeToLive
+	if ttl == 0 {
+		ttl = DefaultTTL
+	}
+
 	c := Claims{
 		UserUUID:    user.UUID.String(),
 		Permissions: int64(opts.RequestedPermissions),
 		Email:       user.Email,
 		Data:        opts.Data,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(ttl).Unix(),
+		},
 	}
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	token, err := t.SignedString(a.signingKey)

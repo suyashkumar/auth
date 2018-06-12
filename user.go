@@ -17,11 +17,13 @@ const (
 	PERMISSIONS_ADMIN = 2
 )
 
+// Scan assigns a value from a database driver
 func (p *Permissions) Scan(value interface{}) error {
 	*p = Permissions(value.(int64))
 	return nil
 }
 
+// Value returns a driver value to be used in a db
 func (p Permissions) Value() (driver.Value, error) {
 	return int64(p), nil
 }
