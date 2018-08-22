@@ -1,8 +1,8 @@
-# auth [WIP]
+# auth
 [![Godoc Reference](https://godoc.org/github.com/suyashkumar/auth?status.svg)](https://godoc.org/github.com/suyashkumar/auth)
 [![Go Report Card](https://goreportcard.com/badge/github.com/suyashkumar/auth)](https://goreportcard.com/report/github.com/suyashkumar/auth)
 
-A simple (but opinionated) Golang authentication library with a very simple interface (below). A gRPC microservice wrapping this interface is in progress and can be found at [suyashkumar/auth-grpc](https://github.com/suyashkumar/auth-grpc) soon.
+A simple (but opinionated) Golang authentication library with a very simple interface (below). You can use this library to pull in core authentication functionality (minting tokens, validating tokens, & registering) to your application quickly and easily. 
 
 ```go
 type Auth interface {
@@ -11,6 +11,8 @@ type Auth interface {
 	Validate(token string) (*Claims, error)
 }
 ```
+
+A gRPC microservice wrapping this interface is in progress and can be found at [suyashkumar/auth-grpc](https://github.com/suyashkumar/auth-grpc).
 
 You only need to provide a database `connectionString` and `signingKey`, and everything else is taken care of for you including:
 * table and database setup (including uniqueness constraints and useful indicies)
